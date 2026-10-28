@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ColorPaint — ColorGlitch</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <main class="app-shell">
+      <section class="wall-panel" aria-labelledby="wall-title">
+        <!-- Тултип для отображения активного/наведенного цвета на сегментах -->
+        <div id="wallColorIndicator" class="wall-tooltip hidden" aria-live="polite"></div>
+
+        <div class="wall-header">
+          <div>
+            <h3 class="eyebrow">ColorPaint</h3>
+            <p id="wall-title">Цвет на мониторе — не финальная выкраска, а инструмент поиска решений.</p>
+          </div>
+
+          <!-- Переключатель режимов отображения (Схема / Фото) -->
+          <div class="button-group mode-toggle-group" role="group" aria-label="Режим отображения стены">
+            <button class="control-button mode-btn active" type="button" data-mode="schematic" aria-pressed="true">Схема</button>
+            <button class="control-button mode-btn" type="button" data-mode="photo" aria-pressed="false">Фото</button>
+          </div>
+
+          <button class="icon-button" id="fullscreenButton" type="button" aria-label="Развернуть стену во весь экран">
+            ⛶
+          </button>
+        </div>
+
+        <!-- Контейнер сегментов стены для 2D-схемы -->
+        <div class="wall-segments wall-segments-container" aria-label="Стена из четырех вертикальных сегментов">
+          <button class="wall-segment active" type="button" data-segment="0" aria-pressed="true">
+            <span>Сегмент 1</span>
+          </button>
+          <button class="wall-segment" type="button" data-segment="1" aria-pressed="false">
+            <span>Сегмент 2</span>
+          </button>
+          <button class="wall-segment" type="button" data-segment="2" aria-pressed="false">
+            <span>Сегмент 3</span>
+          </button>
+          <button class="wall-segment" type="button" data-segment="3" aria-pressed="false">
+            <span>Сегмент 4</span>
+          </button>
+        </div>
+
+        <!-- Canvas для фото-режима (создается автоматически в wall.js, если отсутствует) -->
+        <canvas id="visualizerCanvas" style="display: none;"></canvas>
+      </section>      
+
+      <aside class="control-panel" aria-label="Панель управления цветом">
+        <section class="control-section lighting-section" aria-labelledby="lighting-title">
+          <div class="section-header lighting-header">
+            <h2 id="lighting-title">Освещение</h2>
+            <button class="control-button light-toggle-button" id="toggleLightingButton" type="button" aria-pressed="false">
+              Отключить освещение
+            </button>
+          </div>
+          <div class="lighting-controls">
+            <div class="button-group lighting-mode-group" role="group" aria-label="Режим освещения">
+              <button class="control-button lighting-mode-button active" type="button" data-lighting="warm" aria-pressed="true">Теплый свет</button>
+              <button class="control-button lighting-mode-button" type="button" data-lighting="cool" aria-pressed="false">Холодный свет</button>
+            </div>
+            <label class="range-control kelvin-control" for="lightIntensity">
+              <div class="range-header">
+                <span>Температура света</span>
+                <span class="range-value-inline" id="lightIntensityValue">4500K</span>
+              </div>
+              <div class="range-slider-wrap">
+                <output class="range-bubble" id="lightIntensityBubble" for="lightIntensity">4500K</output>
+                <input id="lightIntensity" type="range" min="2000" max="6500" step="100" value="4500" />
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <section class="control-section color-picking-section" aria-labelledby="color-picking-title">
+          <h2 id="color-picking-title">Подбор цветов</h2>
+          <div class="color-picking-grid">
+            <div class="color-picker-card">
+              <div class="section-header picker-card-header">
+                <h3>Рекомендации</h3>
+                <button class="control-button picker-toggle" id="recommendationsButton" type="button" aria-expanded="false" aria-controls="recommendationsArea">Показать</button>
+              </div>
+              <div class="recommendations-area hidden" id="recommendationsArea" aria-live="polite">
+                <div class="recommendation-group">
+                  <h4>Soft Monochrome</h4>
+                  <div class="swatch-list" id="mono-list"></div>
+                </div>
+                <div class="recommendation-group">
+                  <h4>Natural Harmony</h4>
+                  <div class="swatch-list" id="harmony-list"></div>
+                </div>
+                <div class="recommendation-group">
+                  <h4>Contrast Accent</h4>
+                  <div class="swatch-list" id="contrast-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-section catalog-section" aria-labelledby="catalog-title">
+          <h2 id="catalog-title">Цвета из каталогов</h2>
+          <div class="catalog-input-card">
+            <div id="catalog-container" class="input-row catalog-input-row">
+              <input type="text" id="color-input" placeholder="Введите HEX или код цвета (например AP1-1)" />
+              <button id="applyColorButton" class="control-button" type="button">Применить</button>
+            </div>
+          </div>
+        </section>
+
+<section class="control-section design-solutions-section" aria-labelledby="design-solutions-title">
+  <details class="design-solutions-accordion">
+    <summary class="design-solutions-summary">
+      <h2 id="design-solutions-title">Дизайнерские решения</h2>
+    </summary>
+    
+    <!-- Контейнер для сгенерированных карточек -->
+    <div class="presets-container"></div>
+    
+  </details>
+</section>
+
+        <section class="control-section furniture-section" aria-labelledby="furniture-title">
+          <h2 id="furniture-title">Мебель</h2>
+          <div class="furniture-placeholder">Плейсхолдер для будущего блока мебели</div>
+        </section>
+
+        <section class="control-section color-detect-section" aria-labelledby="color-detect-title">
+          <h2 id="color-detect-title">Определи цвет</h2>
+          <div class="color-detect-card">
+            <label class="color-dropzone" id="colorDropzone" for="imageInput">
+              <input id="imageInput" type="file" accept="image/*" />
+              <span class="color-dropzone-title">Загрузить интерьерное фото</span>
+              <span class="color-dropzone-hint">или перетащите изображение сюда для автоматического подбора палитры</span>
+            </label>
+
+            <div class="image-preview" id="imagePreview" aria-live="polite">
+              <div class="image-preview-empty">Превью изображения</div>
+            </div>
+
+            <div class="main-color-bar" id="mainColorBar" aria-label="Извлеченные доминирующие цвета"></div>
+            <p class="active-color-info">Основной цвет: <span id="activeHexValue">#AABBCC</span></p>
+          </div>
+        </section>
+      </</aside>
+    </main>
+
+    <!-- Подключение JS-модулей в порядке зависимостей -->
+    <script src="js/colorScience.js"></script>
+    <script src="js/harmony.js"></script>
+    <script src="js/lighting.js"></script>
+    <script src="js/simulation.js"></script>
+    <script src="js/wall.js"></script>
+    <script src="js/orchestrator.js"></script>
+    <script src="js/colorPicker.js"></script>
+    <script src="js/glitchEffect.js"></script>
+    <script src="js/imagePalette.js"></script>
+    <script src="js/color-matcher.js"></script>
+    <script src="js/design_presets.js"></script>
+    <script src="script.js" defer></script>
+  </body>
+</html>
