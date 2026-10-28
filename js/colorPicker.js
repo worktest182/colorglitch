@@ -109,6 +109,13 @@
  }
  };
 
+ // Слушаем внешнее событие смены сегмента
+ global.addEventListener('colorGlitchSegmentChanged', function(e) {
+ if (e && e.detail && e.detail.hex) {
+ global.ColorGlitchColorPicker.updateColorFromOutside(e.detail.hex);
+ }
+ });
+
  global.ColorGlitchColorPicker.updateColorFromOutside = function (hex) {
  var v = normalizeHex(hex);
  if (v) {
@@ -158,21 +165,17 @@
  var targetHex = rgbHex ? normalizeHex(rgbHex) : normalizeHex(trimmed);
 
  if (targetHex) {
- // Точное совпадение в каталоге
  if (state.catalogByHex[targetHex]) {
  return state.catalogByHex[targetHex];
  }
-
- // Если точного нет — подбираем наиболее подходящий аналог из каталога!
  var closest = findClosestColorInCatalog(targetHex);
  if (closest) {
  return closest;
  }
-
  return { id: targetHex, original_id: targetHex, name: '', catalog: '', hex: targetHex };
  }
 
- // 2. Поиск по коду каталога (например, VN2042)
+ // 2. Поиск по коду каталога
  var code = normalizeCatalogCode(trimmed);
  if (state.catalogById[code]) return state.catalogById[code];
  return state.catalogById[normalizeToken(trimmed)] || null;
@@ -373,6 +376,20 @@
 
  return {
  getColor: function () { return state.currentColor; },
+ setExternalColor: function (displayCode, hex) {
+ var validHex = normalizeHex(hex) || '#AABBCC';
+ state.currentColor = {
+ id: displayCode,
+ original_id: displayCode,
+ name: '',
+ catalog: '',
+ hex: validHex
+ };
+ applyColorUI(validHex);
+ if (input) {
+ input.value = displayCode;
+ }
+ },
  updateColorFromOutside: function (hex) {
  global.ColorGlitchColorPicker.updateColorFromOutside(hex);
  }
